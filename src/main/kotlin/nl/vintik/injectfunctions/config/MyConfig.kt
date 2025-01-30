@@ -1,31 +1,30 @@
 package nl.vintik.injectfunctions.config
 
 import nl.vintik.injectfunctions.functions.PublishMessage
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-
-fun publishMessage(message: String) {
-    println("Publishing message: $message")
-}
 
 @Configuration
 class MyConfig {
 
-    @Bean("publishMessageTopLevelFunction")
-    fun publishMessageTopLevelFunction(): (String) -> Unit =
-        ::publishMessage
-
-
-    @Bean("publishMessageLambda")
-    fun publishMessageLambda(): (String) -> Unit =
-        { message ->
-            println("Publishing message: $message")
-            // Actual Service Bus logic here
+    @Bean
+    @ConditionalOnProperty(
+        name = ["cloud.provider"],
+        havingValue = "Azure"
+    )
+    fun publishMessageServiceBus() =
+        PublishMessage { message ->
+            println("Publishing message on Service Bus: $message")
         }
 
-    @Bean("publishMessageFunctionalInterfaceLambda")
-    fun publishMessageFunctionalInterface() =
+    @Bean
+    @ConditionalOnProperty(
+        name = ["cloud.provider"],
+        havingValue = "AWS"
+    )
+    fun publishMessageEventBridge() =
         PublishMessage { message ->
-            println("Publishing message: $message")
+            println("Publishing message on Event Bridge: $message")
         }
 }
